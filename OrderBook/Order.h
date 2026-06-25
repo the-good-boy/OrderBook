@@ -1,5 +1,6 @@
 #pragma once
-#include <iostream>
+#include <cstdint>
+#include <memory>
 
 enum class Side{
     BUY,
@@ -41,7 +42,7 @@ public:
 
     Status getStatus() const;
 
-    void fill(std::uint32_t qty);
+    void fill(Quantity qty);
 };
 
 using OrderPointer = std::shared_ptr<Order>;

@@ -1,8 +1,9 @@
 #pragma once
 #include "Command.h"
 #include "BoundedQueue.h"
-#include "OrderBook/OrderBook.h"
+#include "../OrderBook/OrderBook.h"
 #include <atomic>
+#include <functional>
 #include <thread>
 
 using ErrorHandler = std::function<void(const Command&, const std::exception&)>;

@@ -5,17 +5,18 @@ BoundedQueue::BoundedQueue(size_t capacity):
     stopped{false} 
 {}
 
-void BoundedQueue::push(const Command& command) {
+bool BoundedQueue::push(const Command& command) {
     std::unique_lock<std::mutex> lock(m);
 
     notFull.wait(lock, [&]{
         return stopped || q.size() < capacity;
     });
 
-    if(stopped) return;
+    if(stopped) return false;
     q.push_back(command);
 
     notEmpty.notify_one();
+    return true;
 }
 
 bool BoundedQueue::pop(Command& out) {
@@ -35,6 +36,7 @@ bool BoundedQueue::pop(Command& out) {
 }
 
 bool BoundedQueue::isEmpty() const {
+    std::lock_guard<std::mutex> lock(m);
     return q.empty();
 }
 

@@ -1,6 +1,18 @@
 #include "OrderBook.h"
 
+#include <algorithm>
+#include <memory>
+#include <stdexcept>
+#include <string>
+
 void OrderBook::addOrder(const OrderPointer& order) {
+    if (!order) {
+        throw std::invalid_argument("Cannot add a null order");
+    }
+    if (orders.contains(order->getOrderId())) {
+        throw std::logic_error("Order ('" + std::to_string(order->getOrderId()) + "') already exists");
+    }
+
     switch(order->getSide()) {
         case Side::BUY: {
             if(!bids.contains(order->getPrice())) {
@@ -10,8 +22,8 @@ void OrderBook::addOrder(const OrderPointer& order) {
             }
 
             const PriceLevelPointer priceLevel = bids[order->getPrice()];
-            const auto it = priceLevel->orders.append(priceLevel->orders.end(), order);
-            priceLevel->orderIters[order->getOrderId] = it;
+            const auto it = priceLevel->orders.insert(priceLevel->orders.end(), order);
+            priceLevel->orderIters[order->getOrderId()] = it;
             break;
         }
         case Side::SELL: {
@@ -22,8 +34,8 @@ void OrderBook::addOrder(const OrderPointer& order) {
             }
 
             const PriceLevelPointer priceLevel = asks[order->getPrice()];
-            const auto it = priceLevel->orders.append(priceLevel->orders.end(), order);
-            priceLevel->orderIters[order->getOrderId] = it;
+            const auto it = priceLevel->orders.insert(priceLevel->orders.end(), order);
+            priceLevel->orderIters[order->getOrderId()] = it;
             break;
         }
     }
@@ -51,10 +63,6 @@ void OrderBook::cancelOrder(const OrderId orderId) {
         throw std::logic_error("Order ('" + std::to_string(orderId) + "') does not exist or was completely filled");
     }
     const OrderPointer order = orders[orderId];
-    if (order->getStatus() == Status::PARTIALLY_FILLED) {
-        throw std::logic_error("Order ('" + std::to_string(orderId) + "') cannot be canceled as it is already partially filled");
-    }
-
     const Side side = order->getSide();
 
     if (side == Side::BUY) {
@@ -97,6 +105,13 @@ void OrderBook::matchOrders() {
 
         // Fill orders based on remaining quantity differences
         const Quantity qty = std::min(highestBidOrder->getRemainingQuantity(), lowestAskOrder->getRemainingQuantity());
+        trades.push_back({
+            highestBidOrder->getOrderId(),
+            lowestAskOrder->getOrderId(),
+            highestBidOrder->getPrice(),
+            lowestAskOrder->getPrice(),
+            qty
+        });
         highestBidOrder->fill(qty);
         lowestAskOrder->fill(qty);
 
@@ -150,5 +165,23 @@ std::size_t OrderBook::getNumberOfOrders() const {
 
 
 bool OrderBook::contains(const OrderId orderId) const {
-    return orders.contains(orderId);;
+    return orders.contains(orderId);
+}
+
+std::optional<Price> OrderBook::getBestBid() const {
+    if (bids.empty()) {
+        return std::nullopt;
+    }
+    return bids.begin()->first;
+}
+
+std::optional<Price> OrderBook::getBestAsk() const {
+    if (asks.empty()) {
+        return std::nullopt;
+    }
+    return asks.begin()->first;
+}
+
+const std::vector<Trade>& OrderBook::getTrades() const {
+    return trades;
 }

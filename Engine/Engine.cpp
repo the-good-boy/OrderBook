@@ -1,10 +1,13 @@
 #include "Engine.h"
 
+#include <stdexcept>
+#include <utility>
+
 Engine::Engine(size_t queueCapacity):
-    queue(queueCapacity),
     running(false),
     nextSeq(1),
     lastAppliedSeq(0),
+    queue(queueCapacity),
     pending(0)
 {}
 
@@ -33,7 +36,7 @@ void Engine::matchIfNeeded() {
 }
 
 void Engine::run() {
-    while (running.load(std::memory_order_relaxed)) {
+    while (true) {
         Command cmd;
         if (!queue.pop(cmd)) {
             break;
@@ -68,8 +71,13 @@ void Engine::stop() {
 }
 
 SeqNum Engine::submit(Command cmd) {
+    if (!running.load(std::memory_order_acquire)) {
+        throw std::logic_error("Engine must be running before commands can be submitted");
+    }
     cmd.seqNum = nextSeq.fetch_add(1, std::memory_order_relaxed);
-    queue.push(cmd);
+    if (!queue.push(cmd)) {
+        throw std::logic_error("Cannot submit to a stopped engine");
+    }
     return cmd.seqNum;
 }
 

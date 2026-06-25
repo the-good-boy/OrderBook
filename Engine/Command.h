@@ -1,5 +1,5 @@
 #pragma once
-#include "OrderBook/Order.h"
+#include "../OrderBook/Order.h"
 
 enum class CommandType{
     ADD,
@@ -7,7 +7,7 @@ enum class CommandType{
     CANCEL
 };
 
-using SeqNum = uint64_t;
+using SeqNum = std::uint64_t;
 
 struct Command{
     CommandType type;
