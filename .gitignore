@@ -1,0 +1,30 @@
+# Build directories
+/build/
+/cmake-build-*/
+
+# CMake generated files if someone configures in the repo root
+/CMakeCache.txt
+/CMakeFiles/
+/cmake_install.cmake
+/compile_commands.json
+/CTestTestfile.cmake
+/Testing/
+
+# Compiled artifacts
+/*.exe
+*.obj
+*.o
+*.lib
+*.a
+*.dll
+*.pdb
+
+# Editor and local tool state
+/.vscode/
+/.idea/
+/.codex/
+/.agents/
+
+# OS noise
+.DS_Store
+Thumbs.db
